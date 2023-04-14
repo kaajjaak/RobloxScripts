@@ -56,7 +56,7 @@ uis.InputBegan:Connect(function(input)
         return; -- make sure player's not chatting!
     end
     if input.KeyCode == Enum.KeyCode.N then
-        run = false
+        run = not run
     end
     if input.KeyCode == Enum.KeyCode.M then
         autochest = not autochest
@@ -83,7 +83,7 @@ local function attackTarget(targetPart)
     end
 
     teleportToTarget()
-    wait(0.1)
+    wait(1)
     sendLeftClick()
 
     while (targetPart.Parent and targetPart.Parent:FindFirstChild("Humanoid") and targetPart.Parent.Humanoid.Health > 0 and run) do
@@ -91,7 +91,7 @@ local function attackTarget(targetPart)
         wait(0.1)
         teleportToTarget()
     end
-
+    wait(0.1)
     return false
 end
 
@@ -137,6 +137,7 @@ local function autoHeal()
 
             wait(1) -- Add a delay between health checks
         end
+        wait(0.1)
     end
 end
 
@@ -159,28 +160,33 @@ local function autoChest()
                 wait(1) -- Add a delay to prevent excessive checking
             end
         end
+        wait(0.1)
     end
 end
 
 local function mainLoop()
-    while run do
-        local world = game:GetService('Workspace').Worlds:getChildren()[1]
-        local targetMob = world.Mobs['5']:getChildren()[1]
+    while true do
+        while run do
+            wait(0.1)
+            local world = game:GetService('Workspace').Worlds:getChildren()[1]
+            local targetMob = world.Mobs['5']:getChildren()[1]
 
-        if targetMob then
-            local targetPart = targetMob.HumanoidRootPart
-            local success = attackTarget(targetPart)
-
-            -- If the attack is not successful, collect the loot
-            if not success then
+            if targetMob then
+                local targetPart = targetMob.HumanoidRootPart
+                local success = attackTarget(targetPart)
+                wait(0.1)
+                -- If the attack is not successful, collect the loot
+                if not success then
+                    collectLoot()
+                end
+            else
+                -- If there's no target mob, collect the loot
                 collectLoot()
             end
-        else
-            -- If there's no target mob, collect the loot
-            collectLoot()
-        end
 
-        wait(0.1) -- Add a small delay to prevent excessive resource usage
+            wait(0.1) -- Add a small delay to prevent excessive resource usage
+        end
+        wait(0.1)
     end
 end
 
