@@ -66,6 +66,9 @@ uis.InputBegan:Connect(function(input)
     if input.KeyCode == Enum.KeyCode.V then
         levelUp()
     end
+    if input.KeyCode == Enum.KeyCode.C then
+        collectLoot()
+    end
 
 end)
 
@@ -132,6 +135,7 @@ local function collectLoot()
         until (humanoid.MoveDirection == Vector3.new() and (humanoid.RootPart.Position - targetPosition).Magnitude < 5) or not lootPart:IsDescendantOf(game:GetService('Workspace'))
 
         if lootPart:IsDescendantOf(game:GetService('Workspace')) then
+            wait(0.1)
             game:GetService('ReplicatedStorage').Packages._Index['sleitnick_knit@1.4.7'].knit.Services.Loot.RF.SellLoot:InvokeServer()
         end
 
@@ -193,6 +197,7 @@ local function mainLoop()
     while true do
         while run do
             wait(0.1)
+            collectLoot()
             local world = game:GetService('Workspace').Worlds:getChildren()[1]
             local mobs = world.Mobs['4']:getChildren()
             if killBoss then
@@ -203,6 +208,9 @@ local function mainLoop()
                 lastTargetIndex = 1
             else
                 lastTargetIndex = (lastTargetIndex % #mobs) + 1
+                if not mobs[lastTargetIndex] then
+                    lastTargetIndex = 1
+                end
             end
 
             local targetMob = mobs[lastTargetIndex]
@@ -245,8 +253,6 @@ local function purchaseNextWorld()
     return success, nextWorld
 end
 
-
-
 local function loadWorld(worldName)
     local args = {
         [1] = worldName
@@ -254,14 +260,13 @@ local function loadWorld(worldName)
     game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_knit@1.4.7"):WaitForChild("knit"):WaitForChild("Services"):WaitForChild("World"):WaitForChild("RF"):WaitForChild("LoadWorld"):InvokeServer(unpack(args))
 end
 
-local function levelUp()
+function levelUp()
     local success, nextWorld = purchaseNextWorld()
 
     if success then
         loadWorld(nextWorld)
     end
 end
-
 
 coroutine.wrap(mainLoop)() -- Start the mainLoop function in a separate coroutine
 coroutine.wrap(autoHeal)() -- Start the autoHeal function in a separate coroutine
