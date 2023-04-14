@@ -262,9 +262,9 @@ local function createGui()
         return label
     end
 
-    local runLabel = createLabel("AutoFarm (Toggle): N", -100, run and Color3.new(0, 1, 0) or Color3.new(1, 0, 0))
-    local autoChestLabel = createLabel("AutoChest (Toggle): M", -80, autochest and Color3.new(0, 1, 0) or Color3.new(1, 0, 0))
-    local killBossLabel = createLabel("KillBoss (Toggle): B", -60, killBoss and Color3.new(0, 1, 0) or Color3.new(1, 0, 0))
+    runLabel = createLabel("AutoFarm (Toggle): N", -100, run and Color3.new(0, 1, 0) or Color3.new(1, 0, 0))
+    autoChestLabel = createLabel("AutoChest (Toggle): M", -80, autochest and Color3.new(0, 1, 0) or Color3.new(1, 0, 0))
+    killBossLabel = createLabel("KillBoss (Toggle): B", -60, killBoss and Color3.new(0, 1, 0) or Color3.new(1, 0, 0))
     createLabel("Level Up: V", -40, Color3.new(0, 0, 1)) -- Blue
     createLabel("Collect Loot: X", -20, Color3.new(0, 0, 1)) -- Blue
 
@@ -276,39 +276,65 @@ local function setupGui()
     if Player.PlayerGui:FindFirstChild("KeybindsGui") then
         Player.PlayerGui.KeybindsGui:Destroy()
     end
-
+    createGui()
     -- Create the GUI
-    local runLabel, autoChestLabel, killBossLabel = createGui()
-
-    uis.InputBegan:Connect(function(input)
-        if (uis:GetFocusedTextBox()) then
-            return ; -- make sure player's not chatting!
-        end
-        if input.KeyCode == Enum.KeyCode.N then
-            run = not run
-            runLabel.TextColor3 = run and Color3.new(0, 1, 0) or Color3.new(1, 0, 0) -- Green if on, red if off
-        end
-        if input.KeyCode == Enum.KeyCode.M then
-            autochest = not autochest
-            autoChestLabel.TextColor3 = autochest and Color3.new(0, 1, 0) or Color3.new(1, 0, 0) -- Green if on, red if off
-        end
-        if input.KeyCode == Enum.KeyCode.B then
-            killBoss = not killBoss
-            killBossLabel.TextColor3 = killBoss and Color3.new(0, 1, 0) or Color3.new(1, 0, 0) -- Green if on, red if off
-        end
-        if input.KeyCode == Enum.KeyCode.V then
-            levelUp()
-        end
-        if input.KeyCode == Enum.KeyCode.X then
-            collectLoot()
-        end
-
-    end)
 end
 
-Player.CharacterAdded:Connect(setupGui)
+local function onCharacterAdded(newCharacter)
+    character = newCharacter
+    setupGui()
+    -- Add any other necessary actions when the character is added, e.g., setting up the character, etc.
+end
+
+Player.CharacterAdded:Connect(onCharacterAdded)
+
+-- Call the function with the current character if it exists, otherwise wait for the character to be added
+if Player.Character then
+    onCharacterAdded(Player.Character)
+else
+    Player.CharacterAdded:Wait()
+    setupGui()
+end
 
 setupGui()
+
+local function toggleRun()
+    run = not run
+    runLabel.TextColor3 = run and Color3.new(0, 1, 0) or Color3.new(1, 0, 0) -- Green if on, red if off
+end
+
+local function toggleAutoChest()
+    autochest = not autochest
+    autoChestLabel.TextColor3 = autochest and Color3.new(0, 1, 0) or Color3.new(1, 0, 0) -- Green if on, red if off
+end
+
+local function toggleKillBoss()
+    killBoss = not killBoss
+    killBossLabel.TextColor3 = killBoss and Color3.new(0, 1, 0) or Color3.new(1, 0, 0) -- Green if on, red if off
+end
+
+uis.InputBegan:Connect(function(input)
+    if (uis:GetFocusedTextBox()) then
+        return ; -- make sure player's not chatting!
+    end
+    if input.KeyCode == Enum.KeyCode.N then
+        toggleRun()
+    end
+    if input.KeyCode == Enum.KeyCode.M then
+        toggleAutoChest()
+    end
+    if input.KeyCode == Enum.KeyCode.B then
+        toggleKillBoss()
+    end
+    if input.KeyCode == Enum.KeyCode.V then
+        levelUp()
+    end
+    if input.KeyCode == Enum.KeyCode.X then
+        collectLoot()
+    end
+end)
+
+
 
 coroutine.wrap(mainLoop)() -- Start the mainLoop function in a separate coroutine
 coroutine.wrap(autoHeal)() -- Start the autoHeal function in a separate coroutine
