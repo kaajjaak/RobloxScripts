@@ -49,29 +49,6 @@ end
 -- Call the function to send a single left-click
 
 
-
-uis.InputBegan:Connect(function(input)
-    if (uis:GetFocusedTextBox()) then
-        return ; -- make sure player's not chatting!
-    end
-    if input.KeyCode == Enum.KeyCode.N then
-        run = not run
-    end
-    if input.KeyCode == Enum.KeyCode.M then
-        autochest = not autochest
-    end
-    if input.KeyCode == Enum.KeyCode.B then
-        killBoss = not killBoss
-    end
-    if input.KeyCode == Enum.KeyCode.V then
-        levelUp()
-    end
-    if input.KeyCode == Enum.KeyCode.C then
-        collectLoot()
-    end
-
-end)
-
 -- function to attack the target
 local function attackTarget(targetPart)
     -- get the weapon service
@@ -111,8 +88,8 @@ local function attackTarget(targetPart)
         wait(0.1)
         teleportToTarget()
 
-        timeSinceLastClick = timeSinceLastClick + 0.1
-        if timeSinceLastClick >= 1 then
+        timeSinceLastClick = timeSinceLastClick + 1
+        if timeSinceLastClick >= 5 then
             sendLeftClick()
             timeSinceLastClick = 0
         end
@@ -254,19 +231,74 @@ local function purchaseNextWorld()
 end
 
 local function loadWorld(worldName)
-    local args = {
-        [1] = worldName
-    }
-    game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_knit@1.4.7"):WaitForChild("knit"):WaitForChild("Services"):WaitForChild("World"):WaitForChild("RF"):WaitForChild("LoadWorld"):InvokeServer(unpack(args))
+    game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_knit@1.4.7"):WaitForChild("knit"):WaitForChild("Services"):WaitForChild("World"):WaitForChild("RF"):WaitForChild("LoadWorld"):InvokeServer(unpack(worldName))
 end
 
-function levelUp()
+local function levelUp()
     local success, nextWorld = purchaseNextWorld()
 
     if success then
+        wait(0.1)
         loadWorld(nextWorld)
     end
 end
+
+-- Creating the GUI
+local function createGui()
+    local screenGui = Instance.new("ScreenGui", Player.PlayerGui)
+    screenGui.Name = "KeybindsGui"
+
+    local function createLabel(text, position, color)
+        local label = Instance.new("TextLabel", screenGui)
+        label.BackgroundTransparency = 1
+        label.Position = UDim2.new(1, -200, 1, position)
+        label.Size = UDim2.new(0, 200, 0, 20)
+        label.Font = Enum.Font.SourceSans
+        label.Text = text
+        label.TextColor3 = color
+        label.TextSize = 14
+        label.TextXAlignment = Enum.TextXAlignment.Right
+        label.TextYAlignment = Enum.TextYAlignment.Center
+        return label
+    end
+
+    local runLabel = createLabel("Run (Toggle): N", -100, run and Color3.new(0, 1, 0) or Color3.new(1, 0, 0))
+    local autoChestLabel = createLabel("AutoChest (Toggle): M", -80, autochest and Color3.new(0, 1, 0) or Color3.new(1, 0, 0))
+    local killBossLabel = createLabel("KillBoss (Toggle): B", -60, killBoss and Color3.new(0, 1, 0) or Color3.new(1, 0, 0))
+    local levelUpLabel = createLabel("Level Up: V", -40, Color3.new(0, 0, 1)) -- Blue
+    local collectLootLabel = createLabel("Collect Loot: X", -20, Color3.new(0, 0, 1)) -- Blue
+
+    return runLabel, autoChestLabel, killBossLabel
+end
+
+local runLabel, autoChestLabel, killBossLabel = createGui()
+
+
+uis.InputBegan:Connect(function(input)
+    if (uis:GetFocusedTextBox()) then
+        return ; -- make sure player's not chatting!
+    end
+    if input.KeyCode == Enum.KeyCode.N then
+        run = not run
+        runLabel.TextColor3 = run and Color3.new(0, 1, 0) or Color3.new(1, 0, 0) -- Green if on, red if off
+    end
+    if input.KeyCode == Enum.KeyCode.M then
+        autochest = not autochest
+        autoChestLabel.TextColor3 = autochest and Color3.new(0, 1, 0) or Color3.new(1, 0, 0) -- Green if on, red if off
+    end
+    if input.KeyCode == Enum.KeyCode.B then
+        killBoss = not killBoss
+        killBossLabel.TextColor3 = killBoss and Color3.new(0, 1, 0) or Color3.new(1, 0, 0) -- Green if on, red if off
+    end
+    if input.KeyCode == Enum.KeyCode.V then
+        levelUp()
+    end
+    if input.KeyCode == Enum.KeyCode.X then
+        collectLoot()
+    end
+
+end)
+
 
 coroutine.wrap(mainLoop)() -- Start the mainLoop function in a separate coroutine
 coroutine.wrap(autoHeal)() -- Start the autoHeal function in a separate coroutine
