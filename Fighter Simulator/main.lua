@@ -63,6 +63,9 @@ uis.InputBegan:Connect(function(input)
     if input.KeyCode == Enum.KeyCode.B then
         killBoss = not killBoss
     end
+    if input.KeyCode == Enum.KeyCode.V then
+        levelUp()
+    end
 
 end)
 
@@ -100,13 +103,13 @@ local function attackTarget(targetPart)
 
     local timeSinceLastClick = 0
 
-    while (targetPart.Parent and targetPart.Parent:FindFirstChild("Humanoid") and targetPart.Parent.Humanoid.Health > 0 and run) do
+    while (not game:GetService("Workspace"):FindFirstChild("Loot") and run and targetPart.Parent and targetPart.Parent:FindFirstChild("Humanoid")) do
         performAttack()
         wait(0.1)
         teleportToTarget()
 
         timeSinceLastClick = timeSinceLastClick + 0.1
-        if timeSinceLastClick >= 2 then
+        if timeSinceLastClick >= 1 then
             sendLeftClick()
             timeSinceLastClick = 0
         end
@@ -184,6 +187,8 @@ local function autoChest()
     end
 end
 
+local lastTargetIndex = 0
+
 local function mainLoop()
     while true do
         while run do
@@ -195,9 +200,12 @@ local function mainLoop()
                 table.sort(mobs, function(a, b)
                     return tonumber(a.Name) > tonumber(b.Name)
                 end)
+                lastTargetIndex = 1
+            else
+                lastTargetIndex = (lastTargetIndex % #mobs) + 1
             end
 
-            local targetMob = mobs[1]
+            local targetMob = mobs[lastTargetIndex]
 
             if targetMob then
                 local targetPart = targetMob.HumanoidRootPart
@@ -217,6 +225,43 @@ local function mainLoop()
         wait(0.1)
     end
 end
+
+local function getCurrentWorld()
+    local world = game:GetService('Workspace').Worlds:getChildren()[1].Name
+    return world
+end
+
+local function purchaseNextWorld()
+    local currentWorld = getCurrentWorld()
+    local nextWorld = "World" .. tostring(tonumber(string.sub(currentWorld, 6)) + 1)
+
+    local success = pcall(function()
+        local args = {
+            [1] = nextWorld
+        }
+        game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_knit@1.4.7"):WaitForChild("knit"):WaitForChild("Services"):WaitForChild("World"):WaitForChild("RF"):WaitForChild("PurchaseWorld"):InvokeServer(unpack(args))
+    end)
+
+    return success, nextWorld
+end
+
+
+
+local function loadWorld(worldName)
+    local args = {
+        [1] = worldName
+    }
+    game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_knit@1.4.7"):WaitForChild("knit"):WaitForChild("Services"):WaitForChild("World"):WaitForChild("RF"):WaitForChild("LoadWorld"):InvokeServer(unpack(args))
+end
+
+local function levelUp()
+    local success, nextWorld = purchaseNextWorld()
+
+    if success then
+        loadWorld(nextWorld)
+    end
+end
+
 
 coroutine.wrap(mainLoop)() -- Start the mainLoop function in a separate coroutine
 coroutine.wrap(autoHeal)() -- Start the autoHeal function in a separate coroutine
