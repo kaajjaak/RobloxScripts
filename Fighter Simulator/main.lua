@@ -1,6 +1,7 @@
 run = true
 autochest = false
 autoheal = true
+killBoss = true
 print(run)
 
 uis = game:GetService("UserInputService")
@@ -21,7 +22,6 @@ local character = Player.Character or Player.CharacterAdded:Wait() -- Wait for t
 local costTextLabel = Player.PlayerGui.App.RegularChest.FrameMain.FrameInfo1X.TextLabelCost
 local healthTextLabel = character.Head:WaitForChild("BillboardGuiNameTag"):WaitForChild("FrameHealth"):WaitForChild("TextLabelHPValue")
 
-
 local function parseCost(costText)
     local value, unit = costText:match("^(%d+%.?%d*)(%a*)$")
     value = tonumber(value)
@@ -36,7 +36,6 @@ local function parseCost(costText)
 
     return value
 end
-
 
 local function sendLeftClick()
     -- Update Mouse Pos
@@ -53,13 +52,16 @@ end
 
 uis.InputBegan:Connect(function(input)
     if (uis:GetFocusedTextBox()) then
-        return; -- make sure player's not chatting!
+        return ; -- make sure player's not chatting!
     end
     if input.KeyCode == Enum.KeyCode.N then
         run = not run
     end
     if input.KeyCode == Enum.KeyCode.M then
         autochest = not autochest
+    end
+    if input.KeyCode == Enum.KeyCode.B then
+        killBoss = not killBoss
     end
 
 end)
@@ -80,16 +82,34 @@ local function attackTarget(targetPart)
         local targetCFrame = targetPart.CFrame
         local targetPosition = targetCFrame.Position - targetCFrame.LookVector * 3
         humanoid.RootPart.CFrame = CFrame.new(targetPosition, targetCFrame.Position)
+        return targetPosition
     end
 
-    teleportToTarget()
+    local function waitForTeleport(targetPosition)
+        local humanoid = game.Players.LocalPlayer.Character.Humanoid
+        while (humanoid.RootPart.Position - targetPosition).Magnitude > 5 do
+            wait(0.1)
+        end
+    end
+
+    local targetPosition = teleportToTarget()
+    waitForTeleport(targetPosition)
     wait(1)
+    teleportToTarget()
     sendLeftClick()
+
+    local timeSinceLastClick = 0
 
     while (targetPart.Parent and targetPart.Parent:FindFirstChild("Humanoid") and targetPart.Parent.Humanoid.Health > 0 and run) do
         performAttack()
         wait(0.1)
         teleportToTarget()
+
+        timeSinceLastClick = timeSinceLastClick + 0.1
+        if timeSinceLastClick >= 2 then
+            sendLeftClick()
+            timeSinceLastClick = 0
+        end
     end
     wait(0.1)
     return false
@@ -169,7 +189,15 @@ local function mainLoop()
         while run do
             wait(0.1)
             local world = game:GetService('Workspace').Worlds:getChildren()[1]
-            local targetMob = world.Mobs['5']:getChildren()[1]
+            local mobs = world.Mobs['4']:getChildren()
+            if killBoss then
+                mobs = world.Mobs['5']:getChildren()
+                table.sort(mobs, function(a, b)
+                    return tonumber(a.Name) > tonumber(b.Name)
+                end)
+            end
+
+            local targetMob = mobs[1]
 
             if targetMob then
                 local targetPart = targetMob.HumanoidRootPart
