@@ -265,8 +265,8 @@ local function createGui()
     local runLabel = createLabel("Run (Toggle): N", -100, run and Color3.new(0, 1, 0) or Color3.new(1, 0, 0))
     local autoChestLabel = createLabel("AutoChest (Toggle): M", -80, autochest and Color3.new(0, 1, 0) or Color3.new(1, 0, 0))
     local killBossLabel = createLabel("KillBoss (Toggle): B", -60, killBoss and Color3.new(0, 1, 0) or Color3.new(1, 0, 0))
-    local levelUpLabel = createLabel("Level Up: V", -40, Color3.new(0, 0, 1)) -- Blue
-    local collectLootLabel = createLabel("Collect Loot: X", -20, Color3.new(0, 0, 1)) -- Blue
+    createLabel("Level Up: V", -40, Color3.new(0, 0, 1)) -- Blue
+    createLabel("Collect Loot: X", -20, Color3.new(0, 0, 1)) -- Blue
 
     return runLabel, autoChestLabel, killBossLabel
 end
