@@ -77,7 +77,7 @@ local function attackTarget(targetPart)
 
     local targetPosition = teleportToTarget()
     waitForTeleport(targetPosition)
-    wait(1)
+    wait(0.1)
     teleportToTarget()
     sendLeftClick()
 
